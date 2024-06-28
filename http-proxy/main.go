@@ -186,6 +186,9 @@ var (
 
 	algenevaAddr = flag.String("algeneva-addr", "", "Address at which to listen for algenAddr connections.")
 
+	waterAddr = flag.String("water-addr", "", "Address at which to listen for WATER connections.")
+	waterWASM = flag.String("water-wasm", "", "Base64 encoded WASM for WATER")
+
 	track = flag.String("track", "", "The track this proxy is running on")
 )
 
@@ -469,6 +472,8 @@ func main() {
 		BroflakeCert:                       os.Getenv("BROFLAKE_CERT"),
 		BroflakeKey:                        os.Getenv("BROFLAKE_KEY"),
 		AlgenevaAddr:                       *algenevaAddr,
+		WaterAddr:                          *waterAddr,
+		WaterWASM:                          *waterWASM,
 	}
 	if *maxmindLicenseKey != "" {
 		log.Debug("Will use Maxmind for geolocating clients")

@@ -65,6 +65,7 @@ import (
 	"github.com/getlantern/http-proxy-lantern/v2/tlslistener"
 	"github.com/getlantern/http-proxy-lantern/v2/tlsmasq"
 	"github.com/getlantern/http-proxy-lantern/v2/tokenfilter"
+	"github.com/getlantern/http-proxy-lantern/v2/water"
 	"github.com/getlantern/http-proxy-lantern/v2/wss"
 
 	algeneva "github.com/getlantern/lantern-algeneva"
@@ -183,6 +184,9 @@ type Proxy struct {
 	BroflakeKey  string
 
 	AlgenevaAddr string
+
+	WaterAddr string
+	WaterWASM string
 
 	throttleConfig throttle.Config
 	instrument     instrument.Instrument
@@ -649,6 +653,8 @@ func (p *Proxy) buildOTELOpts(endpoint string, includeProxyName bool) *otel.Opts
 		opts.Addr = p.BroflakeAddr
 	} else if p.AlgenevaAddr != "" {
 		opts.Addr = p.AlgenevaAddr
+	} else if p.WaterAddr != "" {
+		opts.Addr = p.WaterAddr
 	}
 	if includeProxyName {
 		opts.ProxyName = proxyName
@@ -958,6 +964,19 @@ func (p *Proxy) listenAlgeneva(baseListen func(string) (net.Listener, error)) li
 		log.Debugf("Listening for algeneva at %v", ll.Addr())
 		return ll, nil
 	}
+}
+
+// listenWATER start a WATER listener and return it
+// Currently water doesn't support customized TCP connections and we need to listen and receive requests directly from the WATER listener
+func (p *Proxy) listenWATER(addr string) (net.Listener, error) {
+	ctx := context.Background()
+	waterListener, err := water.NewWATERListener(ctx, addr, p.WaterWASM)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf("Listening for water at %v", waterListener.Addr())
+	return waterListener, nil
 }
 
 func (p *Proxy) setupPacketForward() error {
